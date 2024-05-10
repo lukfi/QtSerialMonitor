@@ -1,8 +1,9 @@
 #include "parser.h"
+#include <QRegularExpression>
 
 Parser::Parser(QObject *parent) : QObject(parent)
 {
-    parserClock = new QTime;
+    parserClock = new QElapsedTimer;
     parserClock->start();
     latestTimeStamp.setHMS(0, 0, 0, 0);
 }
@@ -18,7 +19,7 @@ void Parser::parse(QString inputString, bool syncToSystemClock, bool useExternal
     listTimeStamp.clear();
     lineCount = 0;
 
-    QStringList inputStringSplitArrayLines = inputString.split(QRegExp("[\\n+\\r+]"), Qt::SplitBehaviorFlags::SkipEmptyParts);
+    QStringList inputStringSplitArrayLines = inputString.split(QRegularExpression("[\\n+\\r+]"), Qt::SplitBehaviorFlags::SkipEmptyParts);
     lineCount = inputStringSplitArrayLines.count();
 
     for (auto l = 0; l < inputStringSplitArrayLines.count(); ++l)
@@ -36,12 +37,12 @@ void Parser::parse(QString inputString, bool syncToSystemClock, bool useExternal
             break;
         }
 
-        QRegExp mainSymbols("[+-]?\\d*\\.?\\d+"); // float only   //  QRegExp mainSymbols("[-+]?[0-9]*\.?[0-9]+");
-        QRegExp alphanumericSymbols("\\w+");
-        QRegExp sepSymbols("[=,]");
+        QRegularExpression mainSymbols("[+-]?\\d*\\.?\\d+"); // float only   //  QRegExp mainSymbols("[-+]?[0-9]*\.?[0-9]+");
+        QRegularExpression alphanumericSymbols("\\w+");
+        QRegularExpression sepSymbols("[=,]");
 
         inputStringSplitArrayLines[l].replace(sepSymbols, " ");
-        QStringList inputStringSplitArray = inputStringSplitArrayLines[l].simplified().split(QRegExp("\\s+"), Qt::SplitBehaviorFlags::SkipEmptyParts); // rozdzielamy traktująac spacje jako separator
+        QStringList inputStringSplitArray = inputStringSplitArrayLines[l].simplified().split(QRegularExpression("\\s+"), Qt::SplitBehaviorFlags::SkipEmptyParts); // rozdzielamy traktująac spacje jako separator
 
         for (auto i = 0; i < inputStringSplitArray.count(); ++i)
         {
@@ -74,17 +75,17 @@ void Parser::parse(QString inputString, bool syncToSystemClock, bool useExternal
             }
 
             // Labels +
-            if (i == 0 && mainSymbols.exactMatch(inputStringSplitArray[0]))
+            if (i == 0 && mainSymbols.match(inputStringSplitArray[0]).hasMatch())
             {
                 listNumericData.append(inputStringSplitArray[i].toDouble());
                 stringListLabels.append("Graph 0");
             }
-            else if (i > 0 && mainSymbols.exactMatch(inputStringSplitArray[i]) && mainSymbols.exactMatch(inputStringSplitArray[i - 1]))
+            else if (i > 0 && mainSymbols.match(inputStringSplitArray[i]).hasMatch() && mainSymbols.match(inputStringSplitArray[i - 1]).hasMatch())
             {
                 listNumericData.append(inputStringSplitArray[i].toDouble());
                 stringListLabels.append("Graph " + QString::number(i));
             }
-            else if (i > 0 && mainSymbols.exactMatch(inputStringSplitArray[i]) && !mainSymbols.exactMatch(inputStringSplitArray[i - 1]))
+            else if (i > 0 && mainSymbols.match(inputStringSplitArray[i]).hasMatch() && !mainSymbols.match(inputStringSplitArray[i - 1]).hasMatch())
             {
                 listNumericData.append(inputStringSplitArray[i].toDouble());
                 stringListLabels.append(inputStringSplitArray[i - 1]);
@@ -101,7 +102,7 @@ void Parser::parse(QString inputString, bool syncToSystemClock, bool useExternal
             else
             {
                 if (syncToSystemClock)
-                    listTimeStamp.append(parserClock->currentTime().msecsSinceStartOfDay());
+                    listTimeStamp.append(QTime::currentTime().msecsSinceStartOfDay());
                 else
                     listTimeStamp.append(parserClock->elapsed());
             }
@@ -116,7 +117,7 @@ void Parser::parseCSV(QString inputString, bool useExternalLabel, QString extern
     listTimeStamp.clear();
     lineCount = 0;
 
-    QStringList inputStringSplitArrayLines = inputString.split(QRegExp("[\\n+\\r+]"), Qt::SplitBehaviorFlags::SkipEmptyParts);
+    QStringList inputStringSplitArrayLines = inputString.split(QRegularExpression("[\\n+\\r+]"), Qt::SplitBehaviorFlags::SkipEmptyParts);
     lineCount = inputStringSplitArrayLines.count();
 
     QStringList csvLabels; // !
@@ -136,21 +137,21 @@ void Parser::parseCSV(QString inputString, bool useExternalLabel, QString extern
             break;
         }
 
-        QRegExp mainSymbols("[+-]?\\d*\\.?\\d+"); // float only   //  QRegExp mainSymbols("[-+]?[0-9]*\.?[0-9]+");
-        QRegExp alphanumericSymbols("\\w+");
-        QRegExp sepSymbols("[=,]");
+        QRegularExpression mainSymbols("[+-]?\\d*\\.?\\d+"); // float only   //  QRegExp mainSymbols("[-+]?[0-9]*\.?[0-9]+");
+        QRegularExpression alphanumericSymbols("\\w+");
+        QRegularExpression sepSymbols("[=,]");
 
         inputStringSplitArrayLines[l].replace(sepSymbols, " ");
         inputStringSplitArrayLines[l].remove("\"");
 
-        QStringList inputStringSplitArray = inputStringSplitArrayLines[l].simplified().split(QRegExp("\\s+"), Qt::SplitBehaviorFlags::SkipEmptyParts); // rozdzielamy traktująac spacje jako separator
+        QStringList inputStringSplitArray = inputStringSplitArrayLines[l].simplified().split(QRegularExpression("\\s+"), Qt::SplitBehaviorFlags::SkipEmptyParts); // rozdzielamy traktująac spacje jako separator
 
         // Look for labels
         if (l == 0)
         {
             for (auto i = 0; i < inputStringSplitArray.count(); ++i)
             {
-                if (!mainSymbols.exactMatch(inputStringSplitArray[i]))
+                if (!mainSymbols.match(inputStringSplitArray[i]).hasMatch())
                 {
                     if (!csvLabels.contains(inputStringSplitArray[i]))
                         csvLabels.append(inputStringSplitArray[i]);
@@ -195,7 +196,7 @@ void Parser::parseCSV(QString inputString, bool useExternalLabel, QString extern
         // Look for data
         for (auto i = 0; i < inputStringSplitArray.count(); ++i)
         {
-            if (mainSymbols.exactMatch(inputStringSplitArray[i]))
+            if (mainSymbols.match(inputStringSplitArray[i]).hasMatch())
             {
                 if (i >= csvLabels.count())
                     continue; // TODO ERROR REPORTING
@@ -240,11 +241,11 @@ QStringList Parser::getStringListNumericData() { return stringListNumericData; }
 QStringList Parser::getTextList() { return textStorage; }
 void Parser::clearExternalClock() { latestTimeStamp.setHMS(0, 0, 0, 0); }
 void Parser::restartChartTimer() { parserClock->restart(); }
-void Parser::parserClockAddMSecs(int millis)
-{
-    parserClock->addMSecs(millis);
-    // parserClock->start();
-}
+// void Parser::parserClockAddMSecs(int millis)
+// {
+//     parserClock->addMSecs(millis);
+//     // parserClock->start();
+// }
 
 void Parser::appendSetToMemory(QStringList newlabelList, QList<double> newDataList, QList<long> newTimeList, QString text)
 {

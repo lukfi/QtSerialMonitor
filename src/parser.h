@@ -28,7 +28,7 @@ public:
     void clearStorage();
     void parse(QString inputString, bool syncToSystemClock = true, bool useExternalClock = false, QString externalClockLabel = QString());
     void parseCSV(QString inputString, bool useExternalLabel = false, QString externalClockLabel = "");
-    void parserClockAddMSecs(int millis);
+    //void parserClockAddMSecs(int millis);
     void resetTimeRange();
     void restartChartTimer();
     void setParsingTimeRange(QTime minTime, QTime maxTime);
@@ -49,7 +49,7 @@ private:
     QStringList labelStorage;
     QStringList stringListNumericData, stringListLabels;
     QStringList textStorage;
-    QTime *parserClock;
+    QElapsedTimer* parserClock;
     QTime latestTimeStamp;
     QTime minimumTime, maximumTime;
 };

@@ -208,7 +208,7 @@ void MainWindow::settingsLoadAll()
 
     // ----- Window size ----- //
     {
-        QStringList windowSize = appSettings.value("layout/windowSize.size").value<QString>().split(QRegExp("\\s+"), QString::SplitBehavior::SkipEmptyParts);
+        QStringList windowSize = appSettings.value("layout/windowSize.size").value<QString>().split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
 
         if (!windowSize.isEmpty())
             this->resize(windowSize.first().trimmed().toInt(), windowSize.last().trimmed().toInt());
@@ -219,11 +219,11 @@ void MainWindow::settingsLoadAll()
     {
         QStringList splitterSizes;
 
-        splitterSizes = appSettings.value("layout/splitterReceivedData.sizes").value<QString>().split(QRegExp("\\s+"), QString::SplitBehavior::SkipEmptyParts);
+        splitterSizes = appSettings.value("layout/splitterReceivedData.sizes").value<QString>().split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
         if (!splitterSizes.isEmpty())
             ui->splitterReceivedData->setSizes(QList<int>({splitterSizes.first().trimmed().toInt(), splitterSizes.last().trimmed().toInt()}));
 
-        splitterSizes = appSettings.value("layout/splitterGraphTable.sizes").value<QString>().split(QRegExp("\\s+"), QString::SplitBehavior::SkipEmptyParts);
+        splitterSizes = appSettings.value("layout/splitterGraphTable.sizes").value<QString>().split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
         if (!splitterSizes.isEmpty())
             ui->splitterGraphTable->setSizes(QList<int>({splitterSizes.first().trimmed().toInt(), splitterSizes.last().trimmed().toInt()}));
 
@@ -236,7 +236,7 @@ void MainWindow::settingsLoadAll()
 
     // ----- comboBoxSendItems ----- //
     {
-        ui->comboBoxSend->addItems(QStringList(appSettings.value("data/comboBoxSendHistory").value<QString>().split(QRegExp("\\n+"), Qt::SplitBehaviorFlags::SkipEmptyParts)));
+        ui->comboBoxSend->addItems(QStringList(appSettings.value("data/comboBoxSendHistory").value<QString>().split(QRegularExpression("\\n+"), Qt::SkipEmptyParts)));
         ui->comboBoxSend->lineEdit()->clear();
     }
     // ------------------------- //
@@ -858,7 +858,9 @@ void MainWindow::on_updateSerialDeviceList()
     foreach (auto item, devices)
         portNames.append(item.portName());
 
-    if ((devices.count() >= 1) && (!(portNames.toSet().intersects(portNamesOld.toSet())) || (portNames.count() != portNamesOld.count())))
+    QSet<QString> portNamesOldSet(portNamesOld.begin(), portNamesOld.end());
+    QSet<QString> portNamesSet(portNames.begin(), portNames.end());
+    if ((devices.count() >= 1) && (!(portNamesSet.intersects(portNamesOldSet)) || (portNames.count() != portNamesOld.count())))
     {
         ui->comboBoxDevices->clear();
 
@@ -1722,7 +1724,7 @@ void MainWindow::on_action3D_orientation_triggered()
 
 void MainWindow::on_printPlot(QPrinter *printer)
 {
-    printer->setPageSize(QPrinter::PageSize::A4);
+    printer->setPageSize(QPageSize::A4);
     QCPPainter painter(printer);
     QRectF pageRect = printer->pageRect(QPrinter::DevicePixel);
     painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform, true);
